@@ -5,6 +5,7 @@ import urllib.request
 
 # input: file ids.txt contenente tutti gli id delle proteine
 # output: file sequence.fasta con le sequenze delle proteine
+
 def idProteinList(idFile):
     return [l[15:-1] for  l in open(idFile)] 
 
