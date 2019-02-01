@@ -1,0 +1,5 @@
+-uniprotKB
+-fare ricerca selezionando db uniprotKB e non mettendo nulla nella barra.
+-selezionare human
+-download file fasta
+-fatto
