@@ -110,8 +110,9 @@ if __name__ == "__main__":
     beginThresholdRow = 0.04
     endThresholdRow = 0.50
     incrementRow = 0.01
-    
-    numberFilesCreated = (endThresholdCol - beginThresholdCol)/incrementCol * (endThresholdRow - beginThresholdRow)/incrementRow
+
+    numberFilesCreated = (endThresholdCol - beginThresholdCol) / \
+        incrementCol * (endThresholdRow - beginThresholdRow)/incrementRow
 
     # ____________ CHANGE THE FOLDERPATH HERE! ____________
     path = "../results/R04_msaCleanedTest/"
@@ -137,7 +138,8 @@ if __name__ == "__main__":
             # stampa di attesa:
             numberOfFiles = (beginThresholdCol + endThresholdCol)*20
             bufferingCount += 1
-            print("{:.2f} files, {} completed".format(numberFilesCreated,bufferingCount))
+            print("{:.0f} files, {} completed".format(
+                numberFilesCreated, bufferingCount))
 
             outputFile = open(outputFileNamePath, "w")
 
