@@ -1,4 +1,3 @@
-
 # input: R03_msa200.clw contains the multiple sequence allignement of all sequences
 # output: R04_msa200Cleaned.clw
 # function: remove row and column with too many gaps
@@ -69,7 +68,6 @@ def cut_alignment(alignment, threshold_c=0, threshold_r=0):
 def alreadyExistNameFile(folderNameToSave, path):
     # filenameToSave become unique
     for root, dirs, files in os.walk(path):
-        trovato = False
         for folder in dirs:
             folder = folder + "/"
             if(folder == folderNameToSave):
@@ -105,20 +103,24 @@ if __name__ == "__main__":
 
     # ____________ CHANGE THE RANGES HERE! ____________
 
-    beginThresholdCol = 0.20
-    endThresholdCol = 0.60
+    beginThresholdCol = 0.04
+    endThresholdCol = 0.50
+    incrementCol = 0.01
 
-    beginThresholdRow = 0.20
-    endThresholdRow = 0.70
+    beginThresholdRow = 0.04
+    endThresholdRow = 0.50
+    incrementRow = 0.01
+    
+    numberFilesCreated = (endThresholdCol - beginThresholdCol)/incrementCol * (endThresholdRow - beginThresholdRow)/incrementRow
 
     # ____________ CHANGE THE FOLDERPATH HERE! ____________
     path = "../results/R04_msaCleanedTest/"
     # _________________________________________________
     outputPathFolder = FindOutputPathFolder(path)
-    bufferingCount = 1
-    for actualRow in np.arange(beginThresholdRow, endThresholdRow, 0.05):
+    bufferingCount = 0
+    for actualRow in np.arange(beginThresholdRow, endThresholdRow, incrementRow):
 
-        for actualCol in np.arange(beginThresholdCol, endThresholdCol, 0.05):
+        for actualCol in np.arange(beginThresholdCol, endThresholdCol, incrementCol):
 
             alignmentOutput = cut_alignment(fileToAlign, actualCol, actualRow)
 
@@ -135,7 +137,7 @@ if __name__ == "__main__":
             # stampa di attesa:
             numberOfFiles = (beginThresholdCol + endThresholdCol)*20
             bufferingCount += 1
-            print("81 files, {} completed".format(bufferingCount))
+            print("{:.2f} files, {} completed".format(numberFilesCreated,bufferingCount))
 
             outputFile = open(outputFileNamePath, "w")
 
