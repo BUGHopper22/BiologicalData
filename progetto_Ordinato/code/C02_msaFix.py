@@ -9,6 +9,8 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Align import MultipleSeqAlignment
 from Bio import AlignIO
 import numpy as np
+from datetime import date
+import os
 #import matplotlib.pyplot as plt
 
 
@@ -58,39 +60,85 @@ def cut_alignment(alignment, threshold_c=0, threshold_r=0):
                                    name=alignment[i].name, description=alignment[i].description, dbxrefs=alignment[i].dbxrefs)
             msa.append(msa_tmp[i])
 
-    
     align = MultipleSeqAlignment(msa)
     return align
 
 
+# __CHECK IF ALREADY EXIST FILENAME
+# _return true iif already exist filename
+def alreadyExistNameFile(folderNameToSave, path):
+    # filenameToSave become unique
+    for root, dirs, files in os.walk(path):
+        trovato = False
+        for folder in dirs:
+            folder = folder + "/"
+            if(folder == folderNameToSave):
+                return True
+    return False
+
+
+def FindOutputPathFolder(path):
+    currentAttempt = 1
+    titleAttempt = '{0:03}'.format(currentAttempt)
+    folderNameToSave = str(currentDate) + "_" + str(titleAttempt) + "/"
+
+    # if name exist increment titleAttempt
+    while(alreadyExistNameFile(folderNameToSave, path)):
+        currentAttempt += 1
+        currentTitleAttempt = '{0:03}'.format(currentAttempt)
+        folderNameToSave = str(currentDate) + "_" + \
+            str(currentTitleAttempt) + "/"
+
+    outputFolderPathName = path + folderNameToSave
+
+    return outputFolderPathName
+
+
 if __name__ == "__main__":
-    import argparse
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-ai", "--alignment_input", required=True,
-                    help="alignment input file")
-    ap.add_argument("-ao", "--alignment_output", required=True,
-                    help="alignment output file")
-    ap.add_argument("-tc", "--threshold_column", required=False,
-                    help="maximum number of dashes accepted in the columns")
-    ap.add_argument("-tr", "--threshold_row", required=True,
-                    help="maximum number of dashes accepted in the rows")
-    args = vars(ap.parse_args())
 
-    alignment_input_file = args["alignment_input"]
-    alignment_output_file = args["alignment_output"]
-    threshold_c = float(args["threshold_column"])
-    threshold_r = float(args["threshold_row"])
+    currentDate = today = date.today()
+    d1 = today.strftime("%Y-%m-%d")
 
-    alignment_input = AlignIO.read(open(alignment_input_file), "clustal")
+    # __INPUT
+    inputFilePath = "../results/R03_msa200.clw"
+    fileToAlign = AlignIO.read(open(inputFilePath), "clustal")
 
-    alignment_output = cut_alignment(alignment_input, threshold_c, threshold_r)
+    # ____________ CHANGE THE RANGES HERE! ____________
 
-    outfile = open(alignment_output_file, "w")
-    treshold = open('threshold.txt',"w")
-    result.write("threshold_column: {}\n".format(threshold_c))
-    result.write("threshold_row: {}\n".format(threshold_r))
+    beginThresholdCol = 0.20
+    endThresholdCol = 0.60
 
+    beginThresholdRow = 0.20
+    endThresholdRow = 0.70
 
-    
-    AlignIO.write(alignment_output, outfile, "clustal")
-    outfile.close()
+    # ____________ CHANGE THE FOLDERPATH HERE! ____________
+    path = "../results/R04_msaCleanedTest/"
+    # _________________________________________________
+    outputPathFolder = FindOutputPathFolder(path)
+    bufferingCount = 1
+    for actualRow in np.arange(beginThresholdRow, endThresholdRow, 0.05):
+
+        for actualCol in np.arange(beginThresholdCol, endThresholdCol, 0.05):
+
+            alignmentOutput = cut_alignment(fileToAlign, actualCol, actualRow)
+
+            if not os.path.exists(outputPathFolder):
+                os.makedirs(outputPathFolder)
+
+            # title with threshold
+            titleCol = actualCol*100
+            titleRow = actualRow*100
+
+            outputFileNamePath = outputPathFolder + "msa_row" + "{:.0f}".format(titleCol) + \
+                "_col" + "{:.0f}".format(titleRow) + ".clw"
+
+            # stampa di attesa:
+            numberOfFiles = (beginThresholdCol + endThresholdCol)*20
+            bufferingCount += 1
+            print("81 files, {} completed".format(bufferingCount))
+
+            outputFile = open(outputFileNamePath, "w")
+
+            AlignIO.write(alignmentOutput, outputFile, "clustal")
+            outputFile.close()
+    print("FINISH")
