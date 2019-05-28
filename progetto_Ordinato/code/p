@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "Start"
+echo "insert folderName of the folder in ./results/folderName in which there are files to analyzed"
+rea
