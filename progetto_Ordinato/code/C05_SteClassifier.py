@@ -1,4 +1,3 @@
-
 # input: HMMER output
 # output: kinase_hmmer_cleaned.tblout
 # function: 
