@@ -4,21 +4,20 @@ echo "inserisci il nome della cartella dentro ./result/folderName in cui sono pr
 read folderName
 
 inputPathFolderName="../results/R04_msaCleanedTest/$folderName"
-echo $inputPathFolderName
 
 outputPathName="../results/R05_hmmerTest/$folderName/"
-echo $outputPathName
 
 mkdir -p $outputPathName
 
+count=0
+
 for file in "$inputPathFolderName"/*
 do
-	
 	outputTitle=${file%.clw}
 	outputTitle2=${outputTitle##*/}
 	outputFullPath="$outputPathName$outputTitle2.hmm"
-	echo $file
-	echo $outputFullPath
-	hmmbuild $outputFullPath $file	
+	hmmbuild $outputFullPath $file
+	count+=1
+	echo "file analyzed: $count"
 done
 echo "Press any key to close"
