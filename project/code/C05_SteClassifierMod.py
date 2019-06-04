@@ -2,13 +2,12 @@
 from Bio import SearchIO
 import numpy as np
 from sklearn.metrics import confusion_matrix
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from Bio import SeqIO
+#import matplotlib.pyplot as plt
+#import matplotlib.gridspec as gridspec
+#from Bio import SeqIO
 import pandas as pd
 import os
-import _pickle as pickle
-import math
+#import _pickle as pickle
 
 
 def insertDataInArrays(qresults, scores, group, family):
@@ -18,31 +17,24 @@ def insertDataInArrays(qresults, scores, group, family):
         group[i] = desc[1]
         family[i] = desc[2]
 
-# create three arrays with statistical measures for each possible threshold
+# create three arrays with statistical value needed
 
 
 def buildPerformanceMeasuresLists(scores, myFamilyTrue):
 
-    # last x-score in plot
     maxBitScore = int(np.max(scores)+10)
+    steps = np.min(-np.diff(scores)) - 0.0001
+    if steps <= 0:
+        steps = 0.09
+        
+    length = len(np.arange(0,maxBitScore,steps))
+    
+    accuracies = [0]*length
+    sensitivities = [0]*length
+    specificities = [0]*length
+    thresholds = [0]*length
 
-    # step for score evaluation
-    minStep = np.min(-np.diff(scores)) - 0.00001
-    if minStep <= 0:
-        minStep = 0.09
-
-    # DA CAMBIARE ASSOLUTAMENTE
-    # l = int(maxBitScore/minStep)
-    l = len(np.arange(0, maxBitScore, minStep))
-
-    accuracies = [0]*l
-    sensitivities = [0]*l
-    specificities = [0]*l
-
-    bestAcc = -1
-    bestAccIndex = -1
-
-    for i, j in enumerate(np.arange(0, maxBitScore, minStep)):
+    for i, j in enumerate(np.arange(0, maxBitScore,steps)):
 
         myFamilyPred = np.int32(scores > j)
 
@@ -56,17 +48,13 @@ def buildPerformanceMeasuresLists(scores, myFamilyTrue):
         acc = (tp + tn) / (tp + fp + fn + tn)
         sens = tp / (tp + fn)
         spec = tn / (tn + fp)
-
+        
+        thresholds[i] = j
         accuracies[i] = acc
         sensitivities[i] = sens
         specificities[i] = spec
 
-        if bestAcc < acc:
-            bestAcc = acc
-            bestAccIndex = myFamilyPred.sum()-1
-            # (tp + tn)
-            # len(myFamilyPred == 1) - 1
-    return accuracies, sensitivities, specificities, bestAccIndex, bestAcc
+    return accuracies, sensitivities, specificities, thresholds
 
 
 def insertDataInKin_ids(kin_ids, thresholdIndex, qresults):
@@ -131,100 +119,49 @@ def analyse_hmm_out(out_hmm, seq_rec_file, resultsMatrix):
 
     # array with indexies of myGroup
     myGroupIndexies = np.arange(N)[myGroupBoolArray]
+    
+    myGroupUniqueFamilies = np.unique(family[myGroupBoolArray])
 
     # true become 1, false become 0
     myGroupTrue = np.int32(myGroupBoolArray)
 
     # create three list with statistical value needed
-    accuracies, sensitivities, specificities, bestAccIndex, bestAcc = buildPerformanceMeasuresLists(
+    accuracies, sensitivities, specificities, thresholds = buildPerformanceMeasuresLists(
         scores, myGroupTrue)
     # print(accuracies)
 
-    thresholdIndex = bestAccIndex
-    # print('thresholdIndex')
-    print("PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP")
+    thresholdIndex = np.argmax(accuracies)
+    thresholdValue = thresholds[thresholdIndex]
     print(thresholdIndex)
-    print(bestAcc)
-    print(len(accuracies))
-    print(np.argmax(accuracies))
-    print(max(accuracies))
+    # print('thresholdIndex')
+    # print(thresholdIndex)
 
     kin_ids = []
-    kin_ids = insertDataInKin_ids(kin_ids, thresholdIndex, qresults)
+    kin_ids = insertDataInKin_ids(kin_ids, thresholdValue, qresults)
 
     fileName = out_hmm
     goodnessValue = np.sum((myGroupIndexies + 1)**2)
 
-    lenKinIds = len(kin_ids)
-    sensitiveValue = sensitivities[thresholdIndex]
+    kinRec = len(kin_ids)
+    sensitivityValue = sensitivities[thresholdIndex]
     # print('sensitiveValue')
     # print(sensitiveValue)
-
-    # list of all the family of STE
-    familyUniqueList = []
-    familyUniqueList = np.unique(family[myGroupIndexies])
-    familyUniqueList = np.array(familyUniqueList)
-    allValueTitle = initializeAllValueTitle(
-        family, myGroupIndexies, familyUniqueList)
-
-    # initialize result matrix dinamically with all title in allValueTitle
-    # EQUIVALENT TO resultsMatrix = {"fileName": [], "goodnessValue": [], "thresholdIndex": [
-    # ], "lenKinIds": [], "sensitivityValue": [], "valSTE20": [], "valSTE7": [], "valSTE20": []}
-    # count = 0
-    # resultsMatrix = {}
-    # for title in allValueTitle:
-    #     resultsMatrix[title] = []
-    # print(allValueTitle)
-    print(family)
-    print(familyUniqueList)
-    familyRangeIndexMatrix = {"familyName": [], 'BI': [], 'WI': [], 'SV': []}
-    for fam in familyUniqueList:
-        familyRangeIndexMatrix["familyName"].append(fam)
-        familyIndexTemp = np.arange(N)[family == fam]
-        # index of first element with family==fam
-        familyRangeIndexMatrix["BI"].append(familyIndexTemp[0])
-        # index of last element with family==fam
-        familyRangeIndexMatrix["WI"].append(familyIndexTemp[-1])
-        totActualFamily = len(familyIndexTemp)
-        captureActualFamily = 0
-        for index in familyIndexTemp:
-            if(index <= thresholdIndex):
-                captureActualFamily += 1
-        familyRangeIndexMatrix["SV"].append(
-            captureActualFamily/totActualFamily)
-    print(familyRangeIndexMatrix)
-
-    familyRangeIndexMatrix = {}
-    for fam in familyUniqueList:
-
-        totActualFamily = len(familyIndexTemp)
-        captureActualFamily = 0
-        for index in familyIndexTemp:
-            if(index <= thresholdIndex):
-                captureActualFamily += 1
-
-        familyRangeIndexMatrix[fam] = []
-        familyRangeIndexMatrix[fam].append(captureActualFamily/totActualFamily)
-
-        familyIndexTemp = np.arange(N)[family == fam]
-        # index of first element with family==fam
-        familyRangeIndexMatrix[fam + "-BI"] = []
-        familyRangeIndexMatrix[fam + "-BI"].append(familyIndexTemp[0])
-        # index of last element with family==fam
-        familyRangeIndexMatrix[fam + "-WI"] = []
-        familyRangeIndexMatrix[fam + "-WI"].append(familyIndexTemp[-1])
-
-    fileName = os.path.basename(out_hmm)
-    resultsMatrix = {"fileName": [], "goodnessValue": [], "thresholdI": [
-    ], "lenKinIds": [], "sensitivityValue": []}
-    resultsMatrix["fileName"].append(fileName)
-    resultsMatrix["goodnessValue"].append(goodnessValue)
-    resultsMatrix["thresholdI"].append(thresholdIndex)
-    resultsMatrix["lenKinIds"].append(lenKinIds)
-    resultsMatrix["sensitivityValue"].append(sensitiveValue)
-
-    resultsMatrix.update(familyRangeIndexMatrix)
-
+    
+    familiesCaptured = family[:kinRec]
+    
+    resultsMatrix = {}
+    resultsMatrix["fileName"] = [fileName]
+    resultsMatrix["goodnessValue"] = [goodnessValue]
+    resultsMatrix["sensitivityValue"] = [sensitivityValue]
+    resultsMatrix["threshold"] = [thresholdValue]
+    resultsMatrix["kinRec"] = [kinRec]
+    for fam in myGroupUniqueFamilies:
+        indices_fam = np.arange(N)[family == fam]
+        resultsMatrix[fam + "-sens"] = [np.sum(familiesCaptured == fam)/len(indices_fam)]
+        resultsMatrix[fam + "-BI"] = [indices_fam[0]]
+        resultsMatrix[fam + "-WI"] = [indices_fam[-1]]
+ 
+    print(resultsMatrix)
     return resultsMatrix
 
     # resultsMatrix.update(familyRangeIndexMatrix)
@@ -253,6 +190,7 @@ if __name__ == "__main__":
     final_list = []
     i = 0
     for root, dirs, files in os.walk(inputFolder):
+        print(files)
         for file in files:
             if (file.endswith(".tblout")):
                 pathInputFile = inputFolder + file
@@ -260,12 +198,20 @@ if __name__ == "__main__":
                     pathInputFile, sequences_recognized, resultsMatrix))
                 print(pathInputFile)
                 resultsMatrix2 = pd.DataFrame(resultsMatrix).values
+                print(resultsMatrix2)
                 l = resultsMatrix2.shape[1]
                 final_list.append(resultsMatrix2.reshape((l,)))
+                # print('resultsMatrix')
+                # print(resultsMatrix)
+                # print(type(resultsMatrix))
+
+                # resultsMatrix = pd.DataFrame(resultsMatrix)
+                # print('resultsMatrix')
+                # print(resultsMatrix)
                 print(i)
                 i += 1
     print(final_list)
-
+    
     with open('../results/R07_ClassifierResults/resultsMatrix.txt', 'w') as file:
         #     # use `pickle.loads` to do the reverse
         for element in resultsMatrix.keys():
