@@ -82,7 +82,8 @@ def analyse_hmm_out(out_hmm,seq_rec_file):
         kin_ids.append(kin_id)
         i = i + 1
     
-    captured = family[:len(kin_ids)]
+    n_captured = len(kin_ids)
+    captured = family[:n_captured]
     
     goodness = {"first_indices" : [], "last_indices" : [], "numerosity" : [], "captured": []}
     goodness["family"] = np.unique(family[indices])
@@ -96,8 +97,11 @@ def analyse_hmm_out(out_hmm,seq_rec_file):
     goodness = pd.DataFrame(goodness)
     goodness["sensitivities"] = goodness["captured"]/goodness["numerosity"]
     
+    n_ste_captured = np.sum(goodness["captured"])
+    
     goodness = goodness.sort_values(by = ['captured','numerosity'], ascending = [True,False])
     
+    print(goodness)
     print("A factor of goodness of the output is {}".format(funct_good))
     print("After giving the threshold that maximises the accuracy of the model, the sensitivity of the model is {}".format(sensitivities[threshold]))
     print("The subfamily with the worst sensitivity is {}, that has {} sequences recognized out of {} in the sample".format(goodness.iloc[0]['family'],goodness.iloc[0]['captured'],goodness.iloc[0]['numerosity']))
