@@ -1,4 +1,4 @@
 #ingore folders:
-/project/results/R04_msaCleanedTest
-/project/results/R05_hmmerTest
-/project/results/R06_hmmerTestCompareDataset
+/project/results/R04_msaCleanedTest/
+/project/results/R05_hmmerTest/
+/project/results/R06_hmmerTestCompareDataset/
