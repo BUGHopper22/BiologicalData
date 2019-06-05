@@ -132,7 +132,7 @@ def analyse_hmm_out(out_hmm, seq_rec_file, resultsMatrix):
 
     thresholdIndex = np.argmax(accuracies)
     thresholdValue = thresholds[thresholdIndex]
-    print(thresholdIndex)
+    #print(thresholdIndex)
     # print('thresholdIndex')
     # print(thresholdIndex)
 
@@ -161,7 +161,7 @@ def analyse_hmm_out(out_hmm, seq_rec_file, resultsMatrix):
         resultsMatrix[fam + "-BI"] = [indices_fam[0]]
         resultsMatrix[fam + "-WI"] = [indices_fam[-1]]
  
-    print(resultsMatrix)
+    #print(resultsMatrix)
     return resultsMatrix
 
     # resultsMatrix.update(familyRangeIndexMatrix)
@@ -190,15 +190,16 @@ if __name__ == "__main__":
     final_list = []
     i = 0
     for root, dirs, files in os.walk(inputFolder):
-        print(files)
+        #print(files)
         for file in files:
             if (file.endswith(".tblout")):
                 pathInputFile = inputFolder + file
                 resultsMatrix = (analyse_hmm_out(
                     pathInputFile, sequences_recognized, resultsMatrix))
-                print(pathInputFile)
+                #print(pathInputFile)
                 resultsMatrix2 = pd.DataFrame(resultsMatrix).values
                 print(resultsMatrix2)
+                #print(resultsMatrix2)
                 l = resultsMatrix2.shape[1]
                 final_list.append(resultsMatrix2.reshape((l,)))
                 # print('resultsMatrix')
@@ -208,9 +209,9 @@ if __name__ == "__main__":
                 # resultsMatrix = pd.DataFrame(resultsMatrix)
                 # print('resultsMatrix')
                 # print(resultsMatrix)
-                print(i)
+                print(" Analysed {} files".format(i+1))
                 i += 1
-    print(final_list)
+    #print(final_list)
     
     with open('../results/R07_ClassifierResults/resultsMatrix.txt', 'w') as file:
         #     # use `pickle.loads` to do the reverse
